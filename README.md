@@ -3,6 +3,7 @@ A simple Home Assistant Add On that acts as a bridge between the Powerwall 3 TED
 
 ## Current state
 - Right now the bridge can deal with a single group of one or more Powerwall 3s.  It might also support expansion units, but I have none to test with.
+- I think there's a race condition on startup, where HA doesn't see the updated states until the second publish after this starts.
 - Power reporting is working for the following:
 	- Aggregates of the entire system
 	- Individual strings on each PW3
