@@ -1,0 +1,34 @@
+name: "Powerwall3 to MQTT"
+description: "A bridge between a Tesla Powerwall3 and MQTT"
+version: "0.0.1"
+slug: "powerwall3mqtt"
+init: false
+stage: experimental
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+services:
+  - mqtt:need
+options:
+  - tedapi
+      - report_vitals: false
+      - poll_interval: 30
+  - mqtt
+schema:
+  - tedapi:
+      password: str
+      report_vitals: bool
+      poll_interval: int
+  - mqtt:
+      server: "str?"
+      port: "str?"
+      ca: "str?"
+      key: "str?"
+      cert: "str?"
+      verify_tls: bool
+      user: "str?"
+      password: "str?"
+      base_topic: "str?"
