@@ -2,6 +2,7 @@
 A simple Home Assistant Add On that acts as a bridge between the Powerwall 3 TEDAPI and MQTT.
 
 ## Current state
+- Running as an addon isn't finished yet.  You need to manually install dependencies and run it outside of HAOS.
 - Right now the bridge can deal with a single group of one or more Powerwall 3s.  It might also support expansion units, but I have none to test with.
 - I think there's a race condition on startup, where HA doesn't see the updated states until the second publish after this starts.
 - Power reporting is working for the following:
