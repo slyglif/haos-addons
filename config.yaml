@@ -13,22 +13,19 @@ arch:
 services:
   - mqtt:need
 options:
-  - tedapi
-      - report_vitals: false
-      - poll_interval: 30
-  - mqtt
+  tedapi_report_vitals: false
+  tedapi_poll_interval: 30
+  mqtt_base_topic: "homeassistant"
 schema:
-  - tedapi:
-      password: str
-      report_vitals: bool
-      poll_interval: int
-  - mqtt:
-      server: "str?"
-      port: "str?"
-      ca: "str?"
-      key: "str?"
-      cert: "str?"
-      verify_tls: bool
-      user: "str?"
-      password: "str?"
-      base_topic: "str?"
+  tedapi_password: str
+  tedapi_report_vitals: bool
+  tedapi_poll_interval: int(5,300)
+  mqtt_server: "str?"
+  mqtt_port: "int?"
+  mqtt_ca: "str?"
+  mqtt_key: "str?"
+  mqtt_cert: "str?"
+  mqtt_verify_tls: bool
+  mqtt_user: "str?"
+  mqtt_password: "str?"
+  mqtt_base_topic: str

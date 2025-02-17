@@ -1,0 +1,60 @@
+---
+configuration:
+  tedapi_password:
+    name: Powerwall 3 Password
+    description: >-
+      The password printed inside the Powerwall 3.
+  tedapi_report_vitals:
+    name: Report Powerwall Vitals
+    description: >-
+      Controls reporting of individual Powerwall vitals, such as PV string
+      power and SoC for each Powerwall (instead of just the aggregate across
+      all Powerwalls).  Defaults to false.
+  tedapi_poll_interval:
+    name: Polling Interval
+    description: >-
+      The number of seconds between each check for status.  Minimum is 5
+      seconds, maximum is 300 seconds.  Defaults to 30 seconds.
+  mqtt_server:
+    name: MQTT Broker
+    description: >-
+      The hostname or IP address of the MQTT broker.  Leave blank to use the
+      default broker for the system.
+  mqtt_port:
+    name: MQTT Port
+    description: >-
+      The port number of the MQTT broker.  Leave blank to use the default
+      broker for the system.
+  mqtt_ca:
+    name: Certificate Authority File
+    description: >-
+      The full path to the CA file for SSL connections.
+  mqtt_key:
+    name: Key File
+    description: >-
+      The full path to the Key file for mutual TLS connections.  If used the
+      Certificate File must be specified as well.
+  mqtt_cert:
+    name: Certificate File
+    description: >-
+      The full path to the Cert file for mutual TLS connections.  If used
+      the Key File must be specified as well.
+  mqtt_verify_tls:
+    name: Verify TLS Connection
+    description: >-
+      Controls verifying the certificate details for TLS connections.
+      Defaults to false.
+  mqtt_user:
+    name: MQTT Username
+    description: >-
+      The username to connect to MQTT.  Leave blank to use the default broker
+      for the system.
+  mqtt_password:
+    name: MQTT Password
+    description: >-
+      The password to connect to MQTT.  Leave blank to use the default broker
+      for the system.
+  mqtt_base_topic:
+    name: Base Topic
+    description: >-
+      The base topic for MQTT auto discovery.  Defaults to "homeassistant".
