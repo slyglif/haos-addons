@@ -12,15 +12,16 @@ from paho.mqtt import client as mqtt_client
 from pypowerwall.tedapi import TEDAPI
 from threading import Condition, RLock, Thread
 
-from hamqtt.devices import TeslaSystem, offline, online, origin, will_topic
+import hamqtt.devices
+from hamqtt.devices import offline, online
 
 # Generate a Client ID with the publish prefix.
 mqtt_id = f'powerwall3mqtt-{random.randint(0, 1000)}'
-will_topic = "%s/will" % mqtt_id
 
-origin['name'] = 'powerwall3mqtt'
-#origin['sw'] = '0.0.0'
-#origin['url'] = ''
+hamqtt.devices.will_topic = "%s/will" % mqtt_id
+hamqtt.devices.origin['name'] = 'powerwall3mqtt'
+#hamqtt.devices.origin['sw'] = '0.0.0'
+#hamqtt.devices.origin['url'] = ''
 
 
 with open("logger.yaml") as stream:
@@ -45,7 +46,7 @@ class powerwall3mqtt:
         self._loopWait = Condition(self._pauseLock)
 
         # Logging level
-        log_level = os.environ.get('POWERWALL3MQTT_CONFIG_LOGGING_LEVEL', 'WARNING')
+        log_level = os.environ.get('POWERWALL3MQTT_CONFIG_LOGGING_LEVEL', 'DEBUG')
         #logging.getHandlerByName('console').setLevel(log_level.upper())
 
         # TEDApi Info
@@ -72,7 +73,7 @@ class powerwall3mqtt:
             raise Exception("Environment not set")
         if self.poll_interval < 5:
             raise Exception("Polling Interval must be >= 5")
-        if self.mqtt_cert != None ^ self.mqtt_key != None:
+        if (self.mqtt_cert != None) ^ (self.mqtt_key != None):
             raise Exception("MQTT Certifcate and Key are both required")
 
 
@@ -97,7 +98,7 @@ class powerwall3mqtt:
 
         def on_connect(client, userdata, flags, rc, properties):
             if rc == 0:
-                logger.info("Connected to MQTT Broker!")
+                logger.info("Connected to MQTT Broker '%s:%s'" % (userdata.mqtt_broker, userdata.mqtt_port))
                 client.message_callback_add(userdata.discovery_prefix + "status", on_ha_status)
                 client.subscribe(userdata.discovery_prefix + "status")
             else:
@@ -107,11 +108,13 @@ class powerwall3mqtt:
         client = mqtt_client.Client(client_id=mqtt_id, callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2)
         client.on_connect = on_connect
         client.user_data_set(self)
-        client.will_set(will_topic, offline)
+        client.will_set(hamqtt.devices.will_topic, offline)
+        logger.debug("MQTT will set on '%s' to '%s'" % (hamqtt.devices.will_topic, offline))
         if self.mqtt_ca != None:
             client.tls_set(ca_certs=self.mqtt_ca, certfile=self.mqtt_cert, keyfile=self.mqtt_key)
             client.tls_insecure_set(self.mqtt_verify_tls)
         client.username_pw_set(self.mqtt_username, self.mqtt_password)
+        logger.debug("MQTT user set to '%s'" % self.mqtt_username)
         client.connect(self.mqtt_broker, self.mqtt_port)
         self.mqtt = client
 
@@ -123,6 +126,7 @@ class powerwall3mqtt:
             result = self.mqtt.publish(message['topic'], json.dumps(message['payload']))
             if result[0] == 0:
                 logger.info("Discovery sent to '%s'" % message['topic'])
+                logger.debug("message = %s", json.dumps(message['payload']))
             else:
                 logger.warn("Failed to send '%s' to '%s'" % (message['topic'], message['payload']))
 
@@ -135,6 +139,7 @@ class powerwall3mqtt:
             result = self.mqtt.publish(message['topic'], json.dumps(message['payload']))
             if result[0] == 0:
                 logger.info("Sent message to '%s'" % message['topic'])
+                logger.debug("message = %s", json.dumps(message['payload']))
             else:
                 logger.warn("Failed to send '%s' to '%s'" % (message['topic'], message['payload']))
 
@@ -145,7 +150,7 @@ class powerwall3mqtt:
         self.tedapi = TEDAPI(self.tedapi_password)
 
         # Populate Tesla info
-        self.tesla = TeslaSystem(self.discovery_prefix, self.tedapi, self.report_vitals)
+        self.tesla = hamqtt.devices.TeslaSystem(self.discovery_prefix, self.tedapi, self.report_vitals)
 
         # TODO: use qos=1 or 2 for initial / unpause, 0 for normal
         self.mqtt.loop_start()

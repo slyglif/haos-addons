@@ -190,9 +190,9 @@ class TeslaSystem(Device):
 
         self.powerwalls = {}
         for b in config['battery_blocks']:
-            self.powerwalls[b['vin']] = PowerWall3(mqtt_prefix, id, b['vin'], config, status, vitals)
+            self.powerwalls[b['vin']] = PowerWall3(mqtt_prefix, id, b['vin'], config, vitals)
 
-        self.update(firmware, config, vitals)
+        self.update(firmware, config, status, vitals)
 
 
     def update(self, firmware = None, config = None, status = None, vitals = None):
