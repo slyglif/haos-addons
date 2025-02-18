@@ -1,5 +1,10 @@
 ---
 configuration:
+  log_level:
+    name: Logging Level
+    description: >-
+      Setting the logging level of the system.  Valid values are DEBUG,
+      INFO, WARNING, ERROR, and CRITICAL.  The default is WARNING.
   tedapi_password:
     name: Powerwall 3 Password
     description: >-
@@ -25,6 +30,10 @@ configuration:
     description: >-
       The port number of the MQTT broker.  Leave blank to use the default
       broker for the system.
+  mqtt_ssl:
+    name: Use TLS with MQTT
+    description: >-
+      Enables TLS when communicating with MQTT.
   mqtt_ca:
     name: Certificate Authority File
     description: >-

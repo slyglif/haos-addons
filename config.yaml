@@ -16,16 +16,19 @@ options:
   tedapi_report_vitals: false
   tedapi_poll_interval: 30
   mqtt_base_topic: "homeassistant"
+  mqtt_ssl: false
 schema:
+  log_level: "list(DEBUG,INFO,WARNING,ERROR,CRITICAL)?"
   tedapi_password: str
   tedapi_report_vitals: bool
-  tedapi_poll_interval: int(5,300)
+  tedapi_poll_interval: "int(5,300)"
+  mqtt_base_topic: str
   mqtt_server: "str?"
   mqtt_port: "int?"
+  mqtt_ssl: bool
   mqtt_ca: "str?"
   mqtt_key: "str?"
   mqtt_cert: "str?"
-  mqtt_verify_tls: bool
+  mqtt_verify_tls: "bool?"
   mqtt_user: "str?"
   mqtt_password: "str?"
-  mqtt_base_topic: str

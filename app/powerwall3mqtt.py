@@ -45,33 +45,43 @@ class powerwall3mqtt:
         self._pauseLock = RLock()
         self._loopWait = Condition(self._pauseLock)
 
-        # Logging level
-        log_level = os.environ.get('POWERWALL3MQTT_CONFIG_LOGGING_LEVEL', 'DEBUG')
-        #logging.getHandlerByName('console').setLevel(log_level.upper())
+        # Parse the config file
+        config = {
+            'log_level': 'WARNING',
+            'tedapi_report_vitals': False,
+            'tedapi_poll_interval': 30,
+            'tedapi_password': None,
+            'mqtt_base_topic': 'homeassistant',
+            'mqtt_host': None,
+            'mqtt_port': 1883,
+            'mqtt_username': None,
+            'mqtt_password': None,
+            'mqtt_verify_tls': False,
+            'mqtt_ssl': False,
+            'mqtt_ca': None,
+            'mqtt_cert': None,
+            'mqtt_key': None
+        }
+        try:
+            config = config | json.load(open('/data/options.json', 'r'))
+        except:
+            pass
 
-        # TEDApi Info
-        self.tedapi_password = os.environ.get('POWERWALL3MQTT_CONFIG_TEDAPI_PASSWORD')
-        self.report_vitals = os.environ.get('POWERWALL3MQTT_CONFIG_TEDAPI_REPORT_VITALS', "true").lower() == "true"
-        self.poll_interval = int(os.environ.get('POWERWALL3MQTT_CONFIG_TEDAPI_POLL_INTERVAL', 30))
+        for k in config.keys():
+            if type(config[k]) is bool:
+                setattr(self, k, bool(os.environ.get('POWERWALL3MQTT_CONFIG_%s' % k.upper(), config[k])))
+            elif type(config[k]) is int:
+                setattr(self, k, int(os.environ.get('POWERWALL3MQTT_CONFIG_%s' % k.upper(), config[k])))
+            else:
+                setattr(self, k, os.environ.get('POWERWALL3MQTT_CONFIG_%s' % k.upper(), config[k]))
 
-        # MQTT Broker Info
-        self.mqtt_broker = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_BROKER')
-        self.mqtt_port = int(os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_PORT'))
-        self.mqtt_username = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_USER')
-        self.mqtt_password = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_PASSWORD')
 
-        # MQTT SSL Info
-        self.mqtt_ca = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_CA')
-        self.mqtt_cert = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_CERT')
-        self.mqtt_key = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_KEY')
-        self.mqtt_verify_tls = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_VERIFY_TLS', False)
-        
-        # HA discovery path
-        self.discovery_prefix = os.environ.get('POWERWALL3MQTT_CONFIG_MQTT_BASE_TOPIC', 'homeassistant')
+        # Set the logging level
+        logging.getHandlerByName('console').setLevel(self.log_level.upper())
 
-        if None in (self.tedapi_password, self.mqtt_broker, self.mqtt_port, self.mqtt_username, self.mqtt_password):
+        if None in (self.tedapi_password, self.mqtt_host, self.mqtt_port, self.mqtt_username, self.mqtt_password):
             raise Exception("Environment not set")
-        if self.poll_interval < 5:
+        if self.tedapi_poll_interval < 5:
             raise Exception("Polling Interval must be >= 5")
         if (self.mqtt_cert != None) ^ (self.mqtt_key != None):
             raise Exception("MQTT Certifcate and Key are both required")
@@ -98,9 +108,9 @@ class powerwall3mqtt:
 
         def on_connect(client, userdata, flags, rc, properties):
             if rc == 0:
-                logger.info("Connected to MQTT Broker '%s:%s'" % (userdata.mqtt_broker, userdata.mqtt_port))
-                client.message_callback_add(userdata.discovery_prefix + "status", on_ha_status)
-                client.subscribe(userdata.discovery_prefix + "status")
+                logger.info("Connected to MQTT Broker '%s:%s'" % (userdata.mqtt_host, userdata.mqtt_port))
+                client.message_callback_add(userdata.mqtt_base_topic + "status", on_ha_status)
+                client.subscribe(userdata.mqtt_base_topic + "status")
             else:
                 logger.error("Failed to connect, return code %d", rc)
 
@@ -110,12 +120,12 @@ class powerwall3mqtt:
         client.user_data_set(self)
         client.will_set(hamqtt.devices.will_topic, offline)
         logger.debug("MQTT will set on '%s' to '%s'" % (hamqtt.devices.will_topic, offline))
-        if self.mqtt_ca != None:
+        if self.mqtt_ssl:
             client.tls_set(ca_certs=self.mqtt_ca, certfile=self.mqtt_cert, keyfile=self.mqtt_key)
             client.tls_insecure_set(self.mqtt_verify_tls)
         client.username_pw_set(self.mqtt_username, self.mqtt_password)
         logger.debug("MQTT user set to '%s'" % self.mqtt_username)
-        client.connect(self.mqtt_broker, self.mqtt_port)
+        client.connect(self.mqtt_host, self.mqtt_port)
         self.mqtt = client
 
     def discover(self):
@@ -150,7 +160,7 @@ class powerwall3mqtt:
         self.tedapi = TEDAPI(self.tedapi_password)
 
         # Populate Tesla info
-        self.tesla = hamqtt.devices.TeslaSystem(self.discovery_prefix, self.tedapi, self.report_vitals)
+        self.tesla = hamqtt.devices.TeslaSystem(self.mqtt_base_topic, self.tedapi, self.tedapi_report_vitals)
 
         # TODO: use qos=1 or 2 for initial / unpause, 0 for normal
         self.mqtt.loop_start()
@@ -160,7 +170,7 @@ class powerwall3mqtt:
 
             self._loopWait.acquire()
             while True:
-                if self._loopWait.wait(self.poll_interval):
+                if self._loopWait.wait(self.tedapi_poll_interval):
                     if not self.getPause():
                         self.discover()
                 if not self.getPause():
