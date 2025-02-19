@@ -1,5 +1,5 @@
 class Entity:
-    def __init__(self, id_prefix, name, type, template = None, device_class = None, unit = None, enabled = True):
+    def __init__(self, id_prefix, name, type, template = None, device_class = None, unit = None, state_class = None, enabled = True):
         self.prefix = id_prefix
         self.name = name
         self.type = type
@@ -9,6 +9,7 @@ class Entity:
             self.template = template
         self.device_class = device_class
         self.unit = unit
+        self.state_class = state_class
         self.value = None
         self.enabled = enabled
 
@@ -28,6 +29,8 @@ class Entity:
             msg['device_class'] = self.device_class
         if self.unit != None:
             msg['unit_of_measurement'] = self.unit
+        if self.state_class != None:
+            msg['state_class'] = self.state_class
         if not self.enabled:
             msg['en'] = "false"
         return msg
@@ -107,6 +110,7 @@ class Power(Entity):
             template=template,
             device_class="power",
             unit="W",
+            state_class='measurement',
             enabled=enabled)
 
 
