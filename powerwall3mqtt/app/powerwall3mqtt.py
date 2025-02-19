@@ -202,7 +202,7 @@ class powerwall3mqtt:
                     return
                 elif key.fileobj == self._ha_status[0]:
                     cmd = self._ha_status[0].recv(1)
-                    if cmd == True:
+                    if cmd == b'\01':
                         logger.info("Received ha_status online")
                         self.discover()
                         # Wait a couple seconds for HA to process discovery
