@@ -1,0 +1,30 @@
+name: "Static Routes"
+description: "Manages static routes on HAOS"
+version: "0.0.1"
+slug: "staticroutes"
+url: "https://github.com/slyglif/haos-addons/staticroutes"
+init: false
+boot: manual
+advanced: true
+host_network: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+stage: experimental
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+options:
+  routes:
+    - nexthop: 127.0.0.1
+      network: 172.30.32.16/30
+  prune: false
+schema:
+  prune: bool
+  routes:
+    - nexthop: match(^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$)
+      network: match(^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}(/(\d|[12]\d|3[012]))?$)
+# https://community.home-assistant.io/t/declare-a-static-route-to-reach-other-lan/311442/9

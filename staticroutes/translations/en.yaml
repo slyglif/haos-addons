@@ -1,0 +1,18 @@
+---
+configuration:
+  prune:
+    name: Prune Other Routes
+    description: >-
+      Prune all other routes currently defined on the host network.
+      Useful to clean up any prior failed attempts.
+  routes:
+    name: Routes to add
+    description: >-
+      The list of routes to add.  The nexthop is the existing IPv4
+      address on the LOCAL subnet that acts as the gateway to the
+      network or IP you are adding a route for.  This should really
+      be a static IP.
+      The network is the IPv4 IP or network/netmask you add adding
+      a route for.  Needs to be in the form of a raw IP (eg,
+      192.168.4.1) or a network/netmask in CIDR format (eg,
+      192.168.4.1/24).

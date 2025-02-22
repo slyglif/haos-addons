@@ -25,7 +25,7 @@ schema:
   tedapi_poll_interval: "int(5,300)"
   mqtt_base_topic: str
   mqtt_server: "str?"
-  mqtt_port: "int?"
+  mqtt_port: "port?"
   mqtt_ssl: bool
   mqtt_ca: "str?"
   mqtt_key: "str?"
