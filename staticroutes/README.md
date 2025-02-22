@@ -3,16 +3,17 @@ A simple Home Assistant Add On that adds static routes to HAOS.
 
 ## How to use
 1) ***DO NOT*** enable "Start on boot" until you have tested the add-on by starting it manually and verifying everything still works.  Failure to heed this warning could result in **BRICKING** Home Assistant until you login on the physical console,  manual remove the add-on, and reboot to restore connectivity.
-2) Enable privilege mode.
-3) Add a Ping integration for an IP you are adding a route for.  It should report down for the moment.
-4) Make sure the IP(s) you want to connect to are available through a static IP on the LOCAL subnet.
-5) Add each pair of nexthop and network to the configuration.
-6) Manually start the add-on.
-7) Verify the following:
+2) Add a Ping integration for an IP you are adding a route for.  It should report down for the moment.
+3) Make sure the IP(s) you want to connect to are available through a static IP on the LOCAL subnet.
+4) Add each pair of nexthop and network to the configuration.
+5) Remove the example entries in the configuration.
+6) Enable "Prune" if you want the add-on to remove static routes that are not listed in the config.
+7) Manually start the add-on.
+8) Verify the following:
 	* You can still connect to and manage HA
 	* All your other add-ons still work
 	* The Ping monitor you added is reporting Connected
-8) Enable "Start on boot"
+9) Enable "Start on boot"
 
 ## Making changes
 1) ***Disable "Start on boot" FIRST.***
