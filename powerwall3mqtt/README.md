@@ -27,3 +27,14 @@ Connecting directly to the TEDAPI requires communicating with an internal IP on 
 - nexthop: 192.168.1.151
   network: 192.168.91.1/32
 ```
+
+## Reporting problems
+- Please switch the Logging Level to DEBUG in Configuration and restart the add-on.
+	- You may need to toggle "Show unused optional configuration options" on.
+- Open an issue at https://github.com/slyglif/haos-addons/issues
+	- Describe the issue you are encountering
+	- Include the version of the add-on
+	- Include the logs
+		- Include the full logs if possible
+		- If the full logs are megabytes in size, at least the first 20 lines at startup and the 10 lines prior to the error
+		- If including the logs inline, please quote them between "\`\`\`" marks (3 backticks)
