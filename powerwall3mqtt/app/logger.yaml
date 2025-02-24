@@ -14,7 +14,15 @@ loggers:
     level: DEBUG
     handlers: [console]
     propagate: no
+  hamqtt:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
   hamqtt.devices:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
+  pytedapi:
     level: DEBUG
     handlers: [console]
     propagate: no

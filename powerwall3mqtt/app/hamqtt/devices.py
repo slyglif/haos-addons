@@ -1,6 +1,6 @@
 import logging
 
-from pypowerwall.tedapi import lookup as dict_lookup
+from pytedapi import lookup as dict_lookup
 
 from hamqtt.entities import *
 
@@ -68,7 +68,7 @@ class Device:
         msg['payload'] = {}
         msg['payload']['mqtt_availability'] = "online"
         for name, value in vars(self).items():
-            if issubclass(type(value), Entity):
+            if issubclass(type(value), ValueEntity):
                 msg['payload'][name] = value.get()
             elif issubclass(type(value), dict):
                 value = self.recurse(value)
@@ -96,7 +96,7 @@ class PowerWall3(Device):
         for i in 'ABCDEF':
             key = "strings['%s']" % i
             self.strings[i] = {}
-            self.strings[i]['mode'] = Entity(
+            self.strings[i]['mode'] = ValueEntity(
                 id,
                 "PV String %s Mode" % i, 'sensor',
                 template = '%s.mode' % key,
@@ -111,7 +111,7 @@ class PowerWall3(Device):
                 "PV String %s Voltage" % i,
                 template = '%s.voltage' % key,
                 enabled = False)
-            self.strings[i]['power'] = Power(
+            self.strings[i]['power'] = PowerValue(
                 id,
                 "PV String %s Power" % i,
                 template = '%s.power' % key,
@@ -151,42 +151,73 @@ class TeslaSystem(Device):
     def __init__(self, mqtt_prefix, tedapi, report_vitals=True):
         firmware = tedapi.get_firmware_version(details=True)
         logger.debug("firmware = %r", firmware)
+        if firmware == None:
+            raise Exception("Unable to fetch firmware information")
 
         config = tedapi.get_config()
         logger.debug("config = %r", config)
+        if config == None:
+            raise Exception("Unable to fetch config information")
 
         status = tedapi.get_status()
         logger.debug("status = %r", status)
+        if status == None:
+            raise Exception("Unable to fetch status information")
 
         vitals = tedapi.get_pw3_vitals()
         logger.debug("vitals = %r", vitals)
+        if vitals == None:
+            logger.warning("Unable to fetch vitals information")
 
         id = "TeslaEnergySystem_" + config['vin']
         Device.__init__(self, mqtt_prefix, id)
 
         self.tedapi = tedapi
         self.report_vitals = report_vitals
-        self.serial = firmware['system']['gateway']['serialNumber']
-        self.part_number = firmware['system']['gateway']['partNumber']
-        self.firmware_version = firmware['system']['version']['text']
+        self.serial = firmware['gateway']['serialNumber']
+        self.part_number = firmware['gateway']['partNumber']
+        self.firmware_version = firmware['version']['text']
         self.vin = config['vin']
         self.site_name = config['site_info']['site_name']
 
-        # Home Assistant Components
+        # Home Assistant sensors
         self.battery = Battery(id, "Battery")
         self.battery_capacity = EnergyStorage(id, "Battery Capacity")
-        self.battery_power = Power(id, "Battery Power")
+        self.battery_power = PowerValue(id, "Battery Power")
         self.battery_remaining = EnergyStorage(id, "Battery Remaining")
         self.battery_reserve_hidden = EnergyStorage(id, "Battery Hidden Reserve", 'battery_reserve_hidden')
         self.battery_reserve_user = Battery(id, "Battery Reserve", 'battery_reserve_user')
         self.battery_time_remaining = Duration(id, "Battery Time Remaining")
         self.calibration = Running(id, "Calibration")
         self.commission_date = Timestamp(id, "Commission Date")
-        self.grid_power = Power(id, "Grid Power")
+        self.grid_power = PowerValue(id, "Grid Power")
         self.grid_status = Connectivity(id, "Grid Status")
-        self.inverter_capacity = Power(id, "Inverter Capacity")
-        self.load_power = Power(id, "Load Power")
-        self.solar_power = Power(id, "Solar Power")
+        self.inverter_capacity = PowerValue(id, "Inverter Capacity")
+        self.load_power = PowerValue(id, "Load Power")
+        self.solar_power = PowerValue(id, "Solar Power")
+
+        # Home Assistant template sensors
+        self.battery_power_in = PowerTemplate(
+            id,
+            "Battery Power Charge",
+            template = "[ value_json.battery_power | int, 0 ] | max",
+            enabled = False
+            )
+        self.battery_power_out = PowerTemplate(
+            id,
+            "Battery Power Discharge",
+            template = "[ value_json.battery_power | int, 0 ] | min | abs",
+            enabled = False)
+        self.grid_power_in = PowerTemplate(
+            id,
+            "Grid Power Import",
+            template = "[ value_json.grid_power | int, 0 ] | max",
+            enabled = False)
+        self.grid_power_out = PowerTemplate(
+            id,
+            "Grid Power Export",
+            template = "[ value_json.grid_power | int, 0 ] | min | abs",
+            enabled = False)
 
         self.powerwalls = {}
         for b in config['battery_blocks']:
@@ -198,16 +229,24 @@ class TeslaSystem(Device):
     def update(self, firmware = None, config = None, status = None, vitals = None):
         if firmware == None:
             firmware = self.tedapi.get_firmware_version(details=True)
+            if firmware == None:
+                raise Exception("Unable to fetch firmware information")
         if config == None:
             config = self.tedapi.get_config()
+            if config == None:
+                raise Exception("Unable to fetch config information")
         if status == None:
             status = self.tedapi.get_status()
+            if status == None:
+                raise Exception("Unable to fetch status information")
         if vitals == None and self.report_vitals:
             vitals = self.tedapi.get_pw3_vitals()
-        
-        self.serial = firmware['system']['gateway']['serialNumber']
-        self.part_number = firmware['system']['gateway']['partNumber']
-        self.firmware_version = firmware['system']['version']['text']
+            if vitals == None:
+                logger.warning("Unable to fetch vitals information")
+
+        self.serial = firmware['gateway']['serialNumber']
+        self.part_number = firmware['gateway']['partNumber']
+        self.firmware_version = firmware['version']['text']
         self.site_name = config['site_info']['site_name']
 
         # Map config
@@ -234,7 +273,7 @@ class TeslaSystem(Device):
         self.battery.set(int(self.battery_remaining.get() * 100 / self.battery_capacity.get()))
         self.battery_time_remaining.set(int(round(self.battery_remaining.get() * 3600 / self.load_power.get(), 0)))
 
-        if self.report_vitals:
+        if vitals != None:
             for p in self.powerwalls.keys():
                 self.powerwalls[p].update(config, vitals)
 

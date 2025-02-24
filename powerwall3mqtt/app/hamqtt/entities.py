@@ -3,26 +3,20 @@ class Entity:
         self.prefix = id_prefix
         self.name = name
         self.type = type
-        if template == None:
-            self.template = name.lower().replace(' ', '_')
-        else:
-            self.template = template
+        self.template = template
         self.device_class = device_class
         self.unit = unit
         self.state_class = state_class
         self.value = None
         self.enabled = enabled
 
-
     def getDiscoveryComponent(self):
+        unique_id = self.name.lower().replace(' ', '_')
         if self.prefix != None:
-            unique_id = self.prefix + '_' + self.name.lower().replace(' ', '_')
-        else:
-            unique_id = self.name.lower().replace(' ', '_')
-
+            unique_id = self.prefix + '_' + unique_id
         msg = {}
         msg['p'] = self.type
-        msg['value_template'] = '{{ value_json.%s }}' % self.template
+        msg['value_template'] = '{{ %s }}' % self.template
         msg['unique_id'] = unique_id
         msg['name'] = self.name
         if self.device_class != None:
@@ -35,16 +29,29 @@ class Entity:
             msg['en'] = "false"
         return msg
 
+
+class ValueEntity(Entity):
+    def __init__(self, id_prefix, name, type, template = None, device_class = None, unit = None, state_class = None, enabled = True):
+        Entity.__init__(self, id_prefix, name, type, template, device_class, unit, state_class, enabled)
+        if template == None:
+            self.template = name.lower().replace(' ', '_')
+
+    def getDiscoveryComponent(self):
+        msg = Entity.getDiscoveryComponent(self)
+        msg['value_template'] = '{{ value_json.%s }}' % self.template
+        return msg
+
     def get(self):
         return self.value
+
     def set(self, value):
         self.value = value
 
 
 
-class Battery(Entity):
+class Battery(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
@@ -54,9 +61,9 @@ class Battery(Entity):
             enabled=enabled)
 
 
-class Connectivity(Entity):
+class Connectivity(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="binary_sensor",
@@ -65,9 +72,9 @@ class Connectivity(Entity):
             enabled=enabled)
 
 
-class Current(Entity):
+class Current(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
@@ -77,9 +84,9 @@ class Current(Entity):
             enabled=enabled)
 
 
-class Duration(Entity):
+class Duration(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
@@ -89,9 +96,9 @@ class Duration(Entity):
             enabled=enabled)
 
 
-class EnergyStorage(Entity):
+class EnergyStorage(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
@@ -101,7 +108,7 @@ class EnergyStorage(Entity):
             enabled=enabled)
 
 
-class Power(Entity):
+class PowerTemplate(Entity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
         Entity.__init__(self,
             id_prefix=id_prefix,
@@ -114,9 +121,22 @@ class Power(Entity):
             enabled=enabled)
 
 
-class Running(Entity):
+class PowerValue(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
+            id_prefix=id_prefix,
+            name=name,
+            type="sensor",
+            template=template,
+            device_class="power",
+            unit="W",
+            state_class='measurement',
+            enabled=enabled)
+
+
+class Running(ValueEntity):
+    def __init__(self, id_prefix, name, template = None, enabled = True):
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="binary_sensor",
@@ -125,9 +145,9 @@ class Running(Entity):
             enabled=enabled)
 
 
-class Timestamp(Entity):
+class Timestamp(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
@@ -136,9 +156,9 @@ class Timestamp(Entity):
             enabled=enabled)
 
 
-class Voltage(Entity):
+class Voltage(ValueEntity):
     def __init__(self, id_prefix, name, template = None, enabled = True):
-        Entity.__init__(self,
+        ValueEntity.__init__(self,
             id_prefix=id_prefix,
             name=name,
             type="sensor",
