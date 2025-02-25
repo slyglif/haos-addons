@@ -170,9 +170,9 @@ class powerwall3mqtt:
             if result[0] == 0:
                 logger.info("Discovery sent to '%s'" % message['topic'])
                 logger.debug("message = %s", json.dumps(message['payload']))
-                logger.info("Sleeping 0.5s to allow HA to process discovery")
             else:
                 logger.warn("Failed to send '%s' to '%s'" % (message['topic'], message['payload']))
+        logger.info("Sleeping 0.5s to allow HA to process discovery")
         time.sleep(0.5)
 
 

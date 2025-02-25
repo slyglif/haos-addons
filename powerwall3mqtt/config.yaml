@@ -1,8 +1,8 @@
 name: "Powerwall3 to MQTT"
 description: "A bridge between a Tesla Powerwall3 and MQTT"
-version: "0.1.0"
+version: "0.1.1"
 slug: "powerwall3mqtt"
-url: "https://github.com/slyglif/haos-addons/powerwall3mqtt"
+url: "https://github.com/slyglif/haos-addons/tree/main/powerwall3mqtt"
 init: false
 stage: experimental
 arch:

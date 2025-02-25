@@ -200,13 +200,13 @@ class TeslaSystem(Device):
         self.battery_power_in = PowerTemplate(
             id,
             "Battery Power Charge",
-            template = "[ value_json.battery_power | int, 0 ] | max",
+            template = "[ value_json.battery_power | int, 0 ] | min | abs",
             enabled = False
             )
         self.battery_power_out = PowerTemplate(
             id,
             "Battery Power Discharge",
-            template = "[ value_json.battery_power | int, 0 ] | min | abs",
+            template = "[ value_json.battery_power | int, 0 ] | max",
             enabled = False)
         self.grid_power_in = PowerTemplate(
             id,
