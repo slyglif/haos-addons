@@ -1,0 +1,3 @@
+[submodule "powerwall3mqtt"]
+	path = powerwall3mqtt
+	url = git@github.com:slyglif/powerwall3mqtt.git
